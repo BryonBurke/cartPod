@@ -23,6 +23,8 @@ const userSchema = new mongoose.Schema({
     enum: ['owner', 'admin'],
     default: 'owner'
   },
+  resetPasswordToken: String,
+  resetPasswordExpires: Date,
   foodCarts: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'FoodCart'
@@ -35,6 +37,8 @@ const userSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
 // Hash password before saving

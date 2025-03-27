@@ -11,6 +11,7 @@ import {
   CircularProgress,
 } from '@mui/material';
 import cartPodService, { CartPod } from '../services/cartPodService';
+import authService from '../services/authService';
 
 interface CartPodFormData {
   name: string;
@@ -63,6 +64,7 @@ const CartPodForm: React.FC = () => {
     setSuccess(false);
 
     try {
+      // The auth token will be automatically added by the axios interceptor
       await cartPodService.createCartPod(formData);
       setSuccess(true);
       // Redirect back to map after a short delay

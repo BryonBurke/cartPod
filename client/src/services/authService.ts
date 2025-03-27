@@ -1,3 +1,4 @@
+import axios from 'axios';
 import api from './api';
 
 export interface LoginCredentials {
@@ -20,35 +21,86 @@ export interface AuthResponse {
   };
 }
 
+const TOKEN_KEY = 'token';
+const REMEMBERED_USERNAME_KEY = 'rememberedUsername';
+
 const authService = {
-  async login(credentials: LoginCredentials): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+  login: async (email: string, password: string) => {
+    try {
+      const response = await api.post('/auth/login', { email, password });
+      const { token } = response.data;
+      localStorage.setItem(TOKEN_KEY, token);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Login failed' };
     }
-    return response.data;
   },
 
-  async register(data: RegisterData): Promise<AuthResponse> {
-    const response = await api.post<AuthResponse>('/auth/register', data);
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
+  register: async (userData: any) => {
+    try {
+      const response = await api.post('/auth/register', userData);
+      const { token } = response.data;
+      localStorage.setItem(TOKEN_KEY, token);
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Registration failed' };
     }
-    return response.data;
   },
 
-  async getCurrentUser(): Promise<AuthResponse['user']> {
-    const response = await api.get<AuthResponse['user']>('/auth/me');
-    return response.data;
+  logout: () => {
+    localStorage.removeItem(TOKEN_KEY);
   },
 
-  logout(): void {
-    localStorage.removeItem('token');
-    window.location.href = '/login';
+  isAuthenticated: () => {
+    return !!localStorage.getItem(TOKEN_KEY);
   },
 
-  isAuthenticated(): boolean {
-    return !!localStorage.getItem('token');
+  getCurrentUser: async () => {
+    try {
+      const response = await api.get('/auth/me');
+      return response.data;
+    } catch (error: any) {
+      throw error.response?.data || { message: 'Failed to get user data' };
+    }
+  },
+
+  getToken: () => localStorage.getItem(TOKEN_KEY),
+  
+  setToken: (token: string) => localStorage.setItem(TOKEN_KEY, token),
+  
+  removeToken: () => localStorage.removeItem(TOKEN_KEY),
+
+  getRememberedUsername: () => localStorage.getItem(REMEMBERED_USERNAME_KEY),
+  
+  setRememberedUsername: (username: string) => localStorage.setItem(REMEMBERED_USERNAME_KEY, username),
+  
+  removeRememberedUsername: () => localStorage.removeItem(REMEMBERED_USERNAME_KEY),
+  
+  // Add auth header to axios requests
+  setupAxiosInterceptors: () => {
+    api.interceptors.request.use(
+      (config) => {
+        const token = localStorage.getItem(TOKEN_KEY);
+        if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+        }
+        return config;
+      },
+      (error) => {
+        return Promise.reject(error);
+      }
+    );
+
+    api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
+          localStorage.removeItem(TOKEN_KEY);
+          window.location.href = '/login';
+        }
+        return Promise.reject(error);
+      }
+    );
   },
 };
 
