@@ -1,5 +1,5 @@
 import React from 'react';
-import { Typography, Box, Button } from '@mui/material';
+import { Typography, Box, Button, Grid } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
@@ -13,16 +13,28 @@ const Home: React.FC = () => {
       <Typography variant="h5" color="text.secondary" paragraph>
         Your platform for managing food cart pods
       </Typography>
-      <Box sx={{ mt: 4 }}>
-        <Button
-          variant="contained"
-          color="primary"
-          size="large"
-          onClick={() => navigate('/cart-pods')}
-        >
-          View Cart Pods
-        </Button>
-      </Box>
+      <Grid container spacing={2} justifyContent="center" sx={{ mt: 4 }}>
+        <Grid item>
+          <Button
+            variant="contained"
+            color="primary"
+            size="large"
+            onClick={() => navigate('/cart-pods')}
+          >
+            View Cart Pods
+          </Button>
+        </Grid>
+        <Grid item>
+          <Button
+            variant="contained"
+            color="secondary"
+            size="large"
+            onClick={() => navigate('/map')}
+          >
+            Find Carts on Map
+          </Button>
+        </Grid>
+      </Grid>
     </Box>
   );
 };

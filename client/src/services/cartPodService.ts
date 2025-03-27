@@ -1,98 +1,153 @@
-import api from './api';
+import axios from 'axios';
 
 export interface CartPod {
   _id: string;
   name: string;
+  description?: string;
   location: {
     type: string;
     coordinates: [number, number];
   };
-  arrangementImage: string;
-  foodCarts: string[];
+  cuisine?: string;
+  hours?: {
+    [key: string]: string;
+  };
+  images?: string[];
   createdAt: string;
   updatedAt: string;
 }
 
-export interface CreateCartPodData {
-  name: string;
-  location: {
-    coordinates: [number, number];
-  };
-  arrangementImage: File;
-}
-
-export interface UpdateCartPodData {
-  name?: string;
-  location?: {
-    coordinates: [number, number];
-  };
-  arrangementImage?: File;
-}
-
-interface CartPodData {
-  name: string;
-  location: {
-    coordinates: [number, number];
-  };
-  arrangementImage: File | null;
+const API_URL = import.meta.env.VITE_API_URL;
+if (!API_URL) {
+  console.error('VITE_API_URL is not defined in environment variables');
 }
 
 const cartPodService = {
-  async getAllCartPods(): Promise<CartPod[]> {
+  getAllCartPods: async (): Promise<CartPod[]> => {
     try {
-      console.log('Fetching cart pods...');
-      const response = await api.get<CartPod[]>('/cartpods');
-      console.log('Cart pods response:', response.data);
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      console.log('Fetching cart pods from:', API_URL);
+      const response = await axios.get(`${API_URL}/cartpods`);
       return response.data;
     } catch (error) {
-      console.error('Error in getAllCartPods:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching cart pods:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data,
+          url: error.config?.url
+        });
+      } else {
+        console.error('Error fetching cart pods:', error);
+      }
+      throw error;
+    }
+  },
+
+  createCartPod: async (cartPodData: Omit<CartPod, '_id' | 'createdAt' | 'updatedAt'>): Promise<CartPod> => {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await axios.post(`${API_URL}/cartpods`, cartPodData);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error creating cart pod:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error creating cart pod:', error);
+      }
+      throw error;
+    }
+  },
+
+  updateCartPod: async (id: string, cartPodData: Partial<CartPod>): Promise<CartPod> => {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await axios.put(`${API_URL}/cartpods/${id}`, cartPodData);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error updating cart pod:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error updating cart pod:', error);
+      }
+      throw error;
+    }
+  },
+
+  deleteCartPod: async (id: string): Promise<void> => {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      await axios.delete(`${API_URL}/cartpods/${id}`);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error deleting cart pod:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error deleting cart pod:', error);
+      }
       throw error;
     }
   },
 
   async getCartPodById(id: string): Promise<CartPod> {
-    const response = await api.get<CartPod>(`/cartpods/${id}`);
-    return response.data;
-  },
-
-  async createCartPod(data: CartPodData): Promise<CartPod> {
-    const formData = new FormData();
-    formData.append('name', data.name);
-    formData.append('location[coordinates][0]', data.location.coordinates[0].toString());
-    formData.append('location[coordinates][1]', data.location.coordinates[1].toString());
-    if (data.arrangementImage) {
-      formData.append('arrangementImage', data.arrangementImage);
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await axios.get<CartPod>(`${API_URL}/cartpods/${id}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching cart pod by ID:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error fetching cart pod by ID:', error);
+      }
+      throw error;
     }
-
-    const response = await api.post<CartPod>('/cartpods', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
-  async updateCartPod(id: string, data: Partial<CartPodData>): Promise<CartPod> {
-    const formData = new FormData();
-    if (data.name) formData.append('name', data.name);
-    if (data.location) formData.append('location', JSON.stringify(data.location));
-    if (data.arrangementImage) formData.append('arrangementImage', data.arrangementImage);
-
-    const response = await api.put<CartPod>(`/cartpods/${id}`, formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
-    return response.data;
-  },
-
-  async deleteCartPod(id: string): Promise<void> {
-    await api.delete(`/cartpods/${id}`);
   },
 
   async findNearbyCartPods(longitude: number, latitude: number, maxDistance: number): Promise<CartPod[]> {
-    const response = await api.get<CartPod[]>(`/cartpods/near/${longitude}/${latitude}/${maxDistance}`);
-    return response.data;
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await axios.get<CartPod[]>(`${API_URL}/cartpods/near/${longitude}/${latitude}/${maxDistance}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error finding nearby cart pods:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error finding nearby cart pods:', error);
+      }
+      throw error;
+    }
   }
 };
 
