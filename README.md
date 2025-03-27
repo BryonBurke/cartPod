@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CartPod - Food Cart Management Platform
 
 A platform for managing cart pods and food carts, featuring A-GPS location tracking and comprehensive cart management features.
@@ -64,3 +65,7 @@ A platform for managing cart pods and food carts, featuring A-GPS location track
 - POST /api/auth/register - Register new owner
 - POST /api/auth/login - Login owner
 - GET /api/auth/me - Get current owner profile 
+=======
+# cartPod
+this app allows user to find food carts
+>>>>>>> 95068690ae945fd597be8df97c150a4b1fabcf08
