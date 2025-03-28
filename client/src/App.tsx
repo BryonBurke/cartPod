@@ -12,8 +12,8 @@ import CartPodForm from './pages/CartPodForm';
 import CartPodDetails from './pages/CartPodDetails';
 import FoodCartForm from './pages/FoodCartForm';
 import FoodCartDetails from './pages/FoodCartDetails';
-import FoodCartEdit from './pages/FoodCartEdit';
 import UserManagement from './pages/UserManagement';
+import LandingPage from './pages/LandingPage';
 import authService from './services/authService';
 
 // Initialize axios interceptors
@@ -38,14 +38,28 @@ const App: React.FC = () => {
       <Router>
         <Navbar />
         <Routes>
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/map" element={<Map />} />
+          <Route path="/cart-pod/:id" element={<CartPodDetails />} />
+          <Route path="/food-cart/:id" element={<FoodCartDetails />} />
+          
+          {/* Protected Routes - Require Authentication */}
           <Route
-            path="/map"
+            path="/cart-pod/new"
             element={
               <ProtectedRoute>
-                <Map />
+                <CartPodForm />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/food-cart/new"
+            element={
+              <ProtectedRoute>
+                <FoodCartForm />
               </ProtectedRoute>
             }
           />
@@ -54,47 +68,6 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <UserManagement />
-              </ProtectedRoute>
-            }
-          />
-          <Route path="/" element={<Navigate to="/map" replace />} />
-          <Route
-            path="/cart-pod-form"
-            element={
-              <ProtectedRoute>
-                <CartPodForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cart-pod/:id"
-            element={
-              <ProtectedRoute>
-                <CartPodDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/cart-pod/:cartPodId/add-food-cart"
-            element={
-              <ProtectedRoute>
-                <FoodCartForm />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/food-cart/:id"
-            element={
-              <ProtectedRoute>
-                <FoodCartDetails />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/food-cart/:id/edit"
-            element={
-              <ProtectedRoute>
-                <FoodCartEdit />
               </ProtectedRoute>
             }
           />
