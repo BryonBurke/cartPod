@@ -45,15 +45,15 @@ const foodCartSchema = new mongoose.Schema({
   },
   podLocationImage: {
     type: String,
-    required: true
+    default: 'https://via.placeholder.com/200x200?text=No+Image'
   },
   cartImage: {
     type: String,
-    required: true
+    default: 'https://via.placeholder.com/200x200?text=No+Image'
   },
   menuImages: [{
     type: String,
-    required: true
+    default: ['https://via.placeholder.com/200x200?text=No+Image']
   }],
   owner: {
     type: mongoose.Schema.Types.ObjectId,

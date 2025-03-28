@@ -5,6 +5,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import Layout from './components/layout/Layout';
 import Map from './pages/Map';
 import CartPodForm from './pages/CartPodForm';
+import CartPodDetails from './pages/CartPodDetails';
+import FoodCartForm from './pages/FoodCartForm';
 import Login from './pages/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import authService from './services/authService';
@@ -59,6 +61,22 @@ const App: React.FC = () => {
               element={
                 <ProtectedRoute>
                   <CartPodForm />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart-pod/:id"
+              element={
+                <ProtectedRoute>
+                  <CartPodDetails />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart-pod/:cartPodId/add-food-cart"
+              element={
+                <ProtectedRoute>
+                  <FoodCartForm />
                 </ProtectedRoute>
               }
             />

@@ -94,10 +94,7 @@ const Login: React.FC = () => {
     setError(null);
 
     try {
-      const response = await authService.login({
-        email: formData.email,
-        password: formData.password,
-      });
+      const response = await authService.login(formData.email, formData.password);
       localStorage.setItem('token', response.token);
       navigate('/map');
     } catch (err) {

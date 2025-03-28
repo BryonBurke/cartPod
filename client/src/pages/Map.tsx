@@ -73,15 +73,7 @@ const Map: React.FC = () => {
 
             // Add click listener to marker
             marker.addListener('click', () => {
-              const infoWindow = new google.maps.InfoWindow({
-                content: `
-                  <div style="padding: 8px;">
-                    <h3 style="margin: 0 0 8px 0;">${pod.name}</h3>
-                    ${pod.description ? `<p style="margin: 0;">${pod.description}</p>` : ''}
-                  </div>
-                `
-              });
-              infoWindow.open(map, marker);
+              navigate(`/cart-pod/${pod._id}`);
             });
 
             markersRef.current.push(marker);

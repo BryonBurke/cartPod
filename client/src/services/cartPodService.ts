@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+export interface FoodCart {
+  name: string;
+  description?: string;
+}
+
 export interface CartPod {
   _id: string;
   name: string;
@@ -13,6 +18,7 @@ export interface CartPod {
     [key: string]: string;
   };
   images?: string[];
+  foodCarts?: FoodCart[];
   createdAt: string;
   updatedAt: string;
 }
@@ -22,6 +28,23 @@ if (!API_URL) {
   console.error('VITE_API_URL is not defined in environment variables');
 }
 
+// Create axios instance with default config
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Add request interceptor to add auth token
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 const cartPodService = {
   getAllCartPods: async (): Promise<CartPod[]> => {
     try {
@@ -29,7 +52,7 @@ const cartPodService = {
         throw new Error('API URL is not configured');
       }
       console.log('Fetching cart pods from:', API_URL);
-      const response = await axios.get(`${API_URL}/cartpods`);
+      const response = await api.get('/cartpods');
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -51,7 +74,7 @@ const cartPodService = {
       if (!API_URL) {
         throw new Error('API URL is not configured');
       }
-      const response = await axios.post(`${API_URL}/cartpods`, cartPodData);
+      const response = await api.post('/cartpods', cartPodData);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -72,7 +95,7 @@ const cartPodService = {
       if (!API_URL) {
         throw new Error('API URL is not configured');
       }
-      const response = await axios.put(`${API_URL}/cartpods/${id}`, cartPodData);
+      const response = await api.put(`/cartpods/${id}`, cartPodData);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -93,7 +116,7 @@ const cartPodService = {
       if (!API_URL) {
         throw new Error('API URL is not configured');
       }
-      await axios.delete(`${API_URL}/cartpods/${id}`);
+      await api.delete(`/cartpods/${id}`);
     } catch (error) {
       if (axios.isAxiosError(error)) {
         console.error('Error deleting cart pod:', {
@@ -113,7 +136,7 @@ const cartPodService = {
       if (!API_URL) {
         throw new Error('API URL is not configured');
       }
-      const response = await axios.get<CartPod>(`${API_URL}/cartpods/${id}`);
+      const response = await api.get<CartPod>(`/cartpods/${id}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -134,7 +157,7 @@ const cartPodService = {
       if (!API_URL) {
         throw new Error('API URL is not configured');
       }
-      const response = await axios.get<CartPod[]>(`${API_URL}/cartpods/near/${longitude}/${latitude}/${maxDistance}`);
+      const response = await api.get<CartPod[]>(`/cartpods/near/${longitude}/${latitude}/${maxDistance}`);
       return response.data;
     } catch (error) {
       if (axios.isAxiosError(error)) {
@@ -145,6 +168,52 @@ const cartPodService = {
         });
       } else {
         console.error('Error finding nearby cart pods:', error);
+      }
+      throw error;
+    }
+  },
+
+  async addFoodCartToPod(cartPodId: string, foodCartData: any): Promise<CartPod> {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await api.post<CartPod>(`/cartpods/${cartPodId}/foodcarts`, foodCartData);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error adding food cart:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error adding food cart:', error);
+      }
+      throw error;
+    }
+  },
+
+  async uploadImage(formData: FormData): Promise<{ imageUrl: string }> {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await api.post<{ imageUrl: string }>('/upload', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error uploading image:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error uploading image:', error);
       }
       throw error;
     }

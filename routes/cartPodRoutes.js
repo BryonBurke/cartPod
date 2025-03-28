@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const CartPod = require('../models/CartPod');
+const FoodCart = require('../models/FoodCart');
 const { auth, isAdmin } = require('../middleware/auth');
 const multer = require('multer');
 
@@ -163,5 +164,56 @@ router.get('/near/:longitude/:latitude/:maxDistance', async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Add food cart to cart pod (authenticated users only)
+router.post('/:id/foodcarts',
+  auth,
+  [
+    body('name').trim().notEmpty().withMessage('Name is required'),
+    body('location').isObject().withMessage('Location is required'),
+    body('location.type').equals('Point').withMessage('Location type must be Point'),
+    body('location.coordinates').isArray().withMessage('Coordinates must be an array'),
+    body('location.coordinates').custom((value) => {
+      if (value.length !== 2) {
+        throw new Error('Coordinates must be [longitude, latitude]');
+      }
+      return true;
+    })
+  ],
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const cartPod = await CartPod.findById(req.params.id);
+      if (!cartPod) {
+        return res.status(404).json({ error: 'Cart pod not found' });
+      }
+
+      const { name, location, podLocationImage, cartImage, menuImages } = req.body;
+
+      const foodCart = new FoodCart({
+        name,
+        location,
+        podLocationImage,
+        cartImage,
+        menuImages,
+        cartPod: cartPod._id,
+        owner: req.user._id // Assuming user ID is available from auth middleware
+      });
+
+      await foodCart.save();
+      cartPod.foodCarts.push(foodCart._id);
+      await cartPod.save();
+
+      res.status(201).json(foodCart);
+    } catch (error) {
+      console.error('Error adding food cart:', error);
+      res.status(500).json({ error: 'Server error', details: error.message });
+    }
+  }
+);
 
 module.exports = router; 
