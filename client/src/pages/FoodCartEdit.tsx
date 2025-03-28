@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -11,10 +11,9 @@ import {
   Grid,
   IconButton,
 } from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import DeleteIcon from '@mui/icons-material/Delete';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import cartPodService, { CartPod, FoodCart } from '../services/cartPodService';
+import DeleteIcon from '@mui/icons-material/Delete';
+import cartPodService, { FoodCart } from '../services/cartPodService';
 
 // Default image URLs from Cloudinary
 const DEFAULT_IMAGES = {
@@ -30,12 +29,12 @@ interface FoodCartFormData {
   menuImages: string[];
 }
 
-const FoodCartForm: React.FC = () => {
-  const { cartPodId } = useParams<{ cartPodId: string }>();
+const FoodCartEdit: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [cartPod, setCartPod] = useState<CartPod | null>(null);
+  const [foodCart, setFoodCart] = useState<FoodCart | null>(null);
   const [formData, setFormData] = useState<FoodCartFormData>({
     name: '',
     podLocationImage: DEFAULT_IMAGES.POD_LOCATION,
@@ -44,25 +43,31 @@ const FoodCartForm: React.FC = () => {
   });
 
   useEffect(() => {
-    const fetchCartPod = async () => {
+    const fetchFoodCart = async () => {
       try {
-        if (!cartPodId) return;
-        const pod = await cartPodService.getCartPodById(cartPodId);
-        setCartPod(pod);
+        if (!id) return;
+        const cart = await cartPodService.getFoodCartById(id);
+        setFoodCart(cart);
+        setFormData({
+          name: cart.name,
+          podLocationImage: cart.podLocationImage || DEFAULT_IMAGES.POD_LOCATION,
+          cartImage: cart.cartImage || DEFAULT_IMAGES.CART,
+          menuImages: cart.menuImages.length > 0 ? cart.menuImages : [DEFAULT_IMAGES.MENU],
+        });
       } catch (err) {
-        console.error('Error fetching cart pod:', err);
-        setError('Failed to load cart pod details.');
+        console.error('Error fetching food cart:', err);
+        setError('Failed to load food cart details. Please try again later.');
       }
     };
 
-    fetchCartPod();
-  }, [cartPodId]);
+    fetchFoodCart();
+  }, [id]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value,
+      [name]: value
     }));
   };
 
@@ -70,21 +75,18 @@ const FoodCartForm: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    const formData = new FormData();
+    formData.append('image', file);
+
     try {
-      setLoading(true);
-      const formData = new FormData();
-      formData.append('image', file);
-      
       const response = await cartPodService.uploadImage(formData);
       setFormData(prev => ({
         ...prev,
-        [field]: response.imageUrl,
+        [field]: response.imageUrl
       }));
     } catch (err) {
       console.error('Error uploading image:', err);
       setError('Failed to upload image. Please try again.');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -110,7 +112,7 @@ const FoodCartForm: React.FC = () => {
   const removeMenuImage = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      menuImages: prev.menuImages.filter((_, i) => i !== index),
+      menuImages: prev.menuImages.filter((_, i) => i !== index)
     }));
   };
 
@@ -120,13 +122,11 @@ const FoodCartForm: React.FC = () => {
     setError(null);
 
     try {
-      if (!cartPodId || !cartPod) throw new Error('Cart pod ID is required');
+      if (!id) throw new Error('Food cart ID is required');
 
       // Only include images in the request if they're not the default images
       const foodCartData = {
         name: formData.name,
-        cartPod: cartPodId,
-        location: cartPod.location,
         ...(formData.podLocationImage !== DEFAULT_IMAGES.POD_LOCATION && { podLocationImage: formData.podLocationImage }),
         ...(formData.cartImage !== DEFAULT_IMAGES.CART && { cartImage: formData.cartImage }),
         ...(formData.menuImages.some(img => img !== DEFAULT_IMAGES.MENU) && {
@@ -134,17 +134,17 @@ const FoodCartForm: React.FC = () => {
         })
       };
 
-      await cartPodService.addFoodCartToPod(cartPodId, foodCartData);
-      navigate(`/cart-pod/${cartPodId}`);
+      await cartPodService.updateFoodCart(id, foodCartData);
+      navigate(`/food-cart/${id}`);
     } catch (err) {
-      console.error('Error creating food cart:', err);
-      setError('Failed to create food cart. Please try again.');
+      console.error('Error updating food cart:', err);
+      setError('Failed to update food cart. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (!cartPod) {
+  if (!foodCart) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="calc(100vh - 64px)">
         <CircularProgress />
@@ -154,10 +154,21 @@ const FoodCartForm: React.FC = () => {
 
   return (
     <Box sx={{ p: 3 }}>
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Add Food Cart to {cartPod.name}
-        </Typography>
+      <Paper sx={{ p: 3, mb: 3, bgcolor: 'primary.main', color: 'white' }}>
+        <Box display="flex" alignItems="center" gap={2}>
+          <Button
+            variant="contained"
+            color="secondary"
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate(-1)}
+            sx={{ bgcolor: 'white', color: 'primary.main', '&:hover': { bgcolor: 'grey.100' } }}
+          >
+            Back
+          </Button>
+          <Typography variant="h3" component="h1" sx={{ fontWeight: 'bold' }}>
+            Edit Food Cart
+          </Typography>
+        </Box>
       </Paper>
 
       <Paper sx={{ p: 3 }}>
@@ -282,7 +293,7 @@ const FoodCartForm: React.FC = () => {
               <Box display="flex" gap={2} justifyContent="flex-end">
                 <Button
                   variant="outlined"
-                  onClick={() => navigate(`/cart-pod/${cartPodId}`)}
+                  onClick={() => navigate(-1)}
                   disabled={loading}
                 >
                   Cancel
@@ -293,7 +304,7 @@ const FoodCartForm: React.FC = () => {
                   color="primary"
                   disabled={loading || !formData.name}
                 >
-                  {loading ? <CircularProgress size={24} /> : 'Add Food Cart'}
+                  {loading ? <CircularProgress size={24} /> : 'Save Changes'}
                 </Button>
               </Box>
             </Grid>
@@ -304,4 +315,4 @@ const FoodCartForm: React.FC = () => {
   );
 };
 
-export default FoodCartForm; 
+export default FoodCartEdit;

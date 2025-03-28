@@ -1,8 +1,27 @@
 import axios from 'axios';
 
 export interface FoodCart {
+  _id: string;
   name: string;
   description?: string;
+  location: {
+    type: string;
+    coordinates: [number, number];
+  };
+  cartPod: string;
+  podLocationImage: string;
+  cartImage: string;
+  menuImages: string[];
+  owner: string;
+  reviews: Array<{
+    rating: number;
+    comment: string;
+    user: string;
+    createdAt: string;
+  }>;
+  averageRating: number;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface CartPod {
@@ -199,7 +218,7 @@ const cartPodService = {
       if (!API_URL) {
         throw new Error('API URL is not configured');
       }
-      const response = await api.post<{ imageUrl: string }>('/upload', formData, {
+      const response = await api.post<{ imageUrl: string }>('/foodcarts/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
@@ -214,6 +233,48 @@ const cartPodService = {
         });
       } else {
         console.error('Error uploading image:', error);
+      }
+      throw error;
+    }
+  },
+
+  async getFoodCartById(id: string): Promise<FoodCart> {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await api.get<FoodCart>(`/foodcarts/${id}`);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error fetching food cart by ID:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error fetching food cart by ID:', error);
+      }
+      throw error;
+    }
+  },
+
+  async updateFoodCart(id: string, foodCartData: Partial<FoodCart>): Promise<FoodCart> {
+    try {
+      if (!API_URL) {
+        throw new Error('API URL is not configured');
+      }
+      const response = await api.put<FoodCart>(`/foodcarts/${id}`, foodCartData);
+      return response.data;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error('Error updating food cart:', {
+          message: error.message,
+          status: error.response?.status,
+          data: error.response?.data
+        });
+      } else {
+        console.error('Error updating food cart:', error);
       }
       throw error;
     }

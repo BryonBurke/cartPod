@@ -356,4 +356,19 @@ router.get('/cartpod/:cartPodId', async (req, res) => {
   }
 });
 
+// Upload single image
+router.post('/upload', auth, upload.single('image'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const imageUrl = await uploadToCloudinary(req.file);
+    res.json({ imageUrl });
+  } catch (error) {
+    console.error('Error uploading image:', error);
+    res.status(500).json({ error: 'Failed to upload image' });
+  }
+});
+
 module.exports = router; 

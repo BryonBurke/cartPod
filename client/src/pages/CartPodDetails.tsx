@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Box, Typography, CircularProgress, Alert, Paper, Grid, Button } from '@mui/material';
+import { Box, Typography, CircularProgress, Alert, Paper, Grid, Button, List, ListItem, ListItemButton, ListItemText } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import cartPodService, { CartPod, FoodCart } from '../services/cartPodService';
 
@@ -81,18 +81,18 @@ const CartPodDetails: React.FC = () => {
           Food Carts
         </Typography>
         {cartPod.foodCarts && cartPod.foodCarts.length > 0 ? (
-          <ul>
-            {cartPod.foodCarts.map((cart: FoodCart, index: number) => (
-              <li key={index}>
-                <Typography variant="body1">{cart.name}</Typography>
-                {cart.description && (
-                  <Typography variant="body2" color="text.secondary">
-                    {cart.description}
-                  </Typography>
-                )}
-              </li>
+          <List>
+            {cartPod.foodCarts.map((cart: FoodCart) => (
+              <ListItem key={cart._id} disablePadding>
+                <ListItemButton onClick={() => navigate(`/food-cart/${cart._id}`)}>
+                  <ListItemText
+                    primary={cart.name}
+                    secondary={cart.description}
+                  />
+                </ListItemButton>
+              </ListItem>
             ))}
-          </ul>
+          </List>
         ) : (
           <Typography variant="body1" color="text.secondary">
             No food carts currently assigned
